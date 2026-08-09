@@ -600,54 +600,30 @@
   el.startBtnLabel = document.getElementById("startBtnLabel");
   el.startBtnLoader = document.getElementById("startBtnLoader");
   el.scrollCue = document.getElementById("scrollCue");
+  el.introScroll = document.getElementById("introScroll");
 
-  function updateScrollCue(beginVisible) {
-    if (!el.scrollCue) return;
+  function updateScrollCue() {
+    if (!el.scrollCue || !el.introScroll) return;
     if (state.screen !== "intro") {
       el.scrollCue.hidden = true;
       return;
     }
-    const intro = document.querySelector('.screen[data-screen="intro"]');
-    if (!intro) return;
-    const overflow = intro.scrollHeight > intro.clientHeight + 24;
-    el.scrollCue.hidden = !overflow || beginVisible === true;
+    const overflow =
+      el.introScroll.scrollHeight > el.introScroll.clientHeight + 24;
+    const nearBottom =
+      el.introScroll.scrollTop + el.introScroll.clientHeight >=
+      el.introScroll.scrollHeight - 40;
+    el.scrollCue.hidden = !overflow || nearBottom;
   }
 
   function bindIntroScrollCue() {
-    const intro = document.querySelector('.screen[data-screen="intro"]');
-    if (!intro || !el.scrollCue || !el.startBtn) return;
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        updateScrollCue(Boolean(entry?.isIntersecting));
-      },
-      { root: null, threshold: 0.6 }
-    );
-    io.observe(el.startBtn);
-
-    intro.addEventListener(
-      "scroll",
-      () => {
-        const rect = el.startBtn.getBoundingClientRect();
-        const visible =
-          rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
-        updateScrollCue(visible);
-      },
-      { passive: true }
-    );
-    window.addEventListener("resize", () => {
-      const rect = el.startBtn.getBoundingClientRect();
-      const visible =
-        rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
-      updateScrollCue(visible);
+    if (!el.introScroll || !el.scrollCue) return;
+    el.introScroll.addEventListener("scroll", updateScrollCue, {
+      passive: true,
     });
-    requestAnimationFrame(() => updateScrollCue(false));
-    setTimeout(() => {
-      const rect = el.startBtn.getBoundingClientRect();
-      const visible =
-        rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
-      updateScrollCue(visible);
-    }, 400);
+    window.addEventListener("resize", updateScrollCue);
+    requestAnimationFrame(updateScrollCue);
+    setTimeout(updateScrollCue, 300);
   }
 
   buildIntroMark();

@@ -156,23 +156,32 @@ img {
 }
 
 /* Intro / shared headers */
-.screen[data-screen="intro"] {
-  position: relative;
+.screen[data-screen="intro"].is-active {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  /* Kill residual animation transform so layout stays predictable */
+  transform: none;
+  animation: none;
+  opacity: 1;
+}
+
+.intro-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hero {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: calc(var(--pad) + 28px) var(--pad) 28px;
-  padding-bottom: 120px;
+  padding: calc(var(--pad) + 28px) var(--pad) 32px;
   max-width: 520px;
   margin: 0 auto;
   width: 100%;
-  min-height: calc(100dvh - 96px);
 }
 
 .study-mark {
@@ -393,26 +402,25 @@ img {
   width: 100%;
 }
 
-.footer-cta--sticky {
-  position: sticky;
-  bottom: 0;
-  z-index: 25;
-  background: var(--bg);
+.footer-cta--dock {
+  flex-shrink: 0;
   max-width: none;
+  width: 100%;
   margin: 0;
+  background: var(--bg);
+  z-index: 25;
 }
 
-.footer-cta--sticky .btn {
+.footer-cta--dock .btn {
   max-width: 520px;
   margin: 0 auto;
 }
 
 .scroll-cue {
-  position: fixed;
-  left: 50%;
-  bottom: calc(88px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 24;
+  position: sticky;
+  bottom: 12px;
+  margin: 0 auto 8px;
+  width: fit-content;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -441,11 +449,11 @@ img {
   0%,
   100% {
     opacity: 0.35;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
   50% {
     opacity: 1;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateY(4px);
   }
 }
 

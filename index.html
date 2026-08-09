@@ -39,34 +39,36 @@
     <main class="app" id="app">
       <!-- INTRO -->
       <section class="screen is-active" data-screen="intro">
-        <div class="hero">
-          <div class="study-mark" aria-hidden="true">
-            <div class="study-mark__grid" id="studyMarkGrid"></div>
-            <div class="study-mark__rail">
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
+        <div class="intro-scroll" id="introScroll">
+          <div class="hero">
+            <div class="study-mark" aria-hidden="true">
+              <div class="study-mark__grid" id="studyMarkGrid"></div>
+              <div class="study-mark__rail">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="kicker">Perception study</div>
+            <h1>Which images hold?</h1>
+            <p>
+              You will review 25 photographs, choose the six strongest, then rank
+              those six. Answer for yourself. There is no right answer.
+            </p>
+            <div class="hero__meta">
+              <span>Anonymous. No account.</span>
+              <span>About three minutes.</span>
             </div>
           </div>
-          <div class="kicker">Perception study</div>
-          <h1>Which images hold?</h1>
-          <p>
-            You will review 25 photographs, choose the six strongest, then rank
-            those six. Answer for yourself. There is no right answer.
-          </p>
-          <div class="hero__meta">
-            <span>Anonymous. No account.</span>
-            <span>About three minutes.</span>
+          <div class="scroll-cue" id="scrollCue" hidden>
+            <span>Scroll</span>
+            <span class="scroll-cue__chevron" aria-hidden="true"></span>
           </div>
         </div>
-        <div class="scroll-cue" id="scrollCue" hidden>
-          <span>Scroll for Begin</span>
-          <span class="scroll-cue__chevron" aria-hidden="true"></span>
-        </div>
-        <div class="footer-cta footer-cta--sticky">
+        <div class="footer-cta footer-cta--dock">
           <button class="btn" type="button" id="startBtn">
             <span class="btn__label" id="startBtnLabel">Begin</span>
             <span class="btn__loader" id="startBtnLoader" hidden aria-hidden="true">
