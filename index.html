@@ -40,6 +40,17 @@
       <!-- INTRO -->
       <section class="screen is-active" data-screen="intro">
         <div class="hero">
+          <div class="study-mark" aria-hidden="true">
+            <div class="study-mark__grid" id="studyMarkGrid"></div>
+            <div class="study-mark__rail">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
           <div class="kicker">Perception study</div>
           <h1>Which images hold?</h1>
           <p>
@@ -52,7 +63,13 @@
           </div>
         </div>
         <div class="footer-cta">
-          <button class="btn" type="button" id="startBtn">Begin</button>
+          <button class="btn" type="button" id="startBtn">
+            <span class="btn__label" id="startBtnLabel">Begin</span>
+            <span class="btn__loader" id="startBtnLoader" hidden aria-hidden="true">
+              <span class="spinner"></span>
+              Preparing images
+            </span>
+          </button>
         </div>
       </section>
 

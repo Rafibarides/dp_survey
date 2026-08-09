@@ -30,3 +30,77 @@ window.PHOTOS = [
 ];
 
 window.PHOTO_BY_ID = Object.fromEntries(window.PHOTOS.map((p) => [p.id, p]));
+
+/** Silent background preload as soon as this file parses. */
+window.PHOTO_PRELOAD = (function createPhotoPreload() {
+  const photos = window.PHOTOS;
+  const state = {
+    total: photos.length,
+    loaded: 0,
+    failed: 0,
+    ready: false,
+    waiters: [],
+  };
+
+  function settled() {
+    return state.loaded + state.failed >= state.total;
+  }
+
+  function flush() {
+    if (!settled()) return;
+    state.ready = true;
+    const waiters = state.waiters.splice(0, state.waiters.length);
+    waiters.forEach((fn) => fn(state));
+  }
+
+  function mark(ok) {
+    if (ok) state.loaded += 1;
+    else state.failed += 1;
+    flush();
+  }
+
+  photos.slice(0, 12).forEach((p) => {
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = p.src;
+    document.head.appendChild(link);
+  });
+
+  photos.forEach((p) => {
+    const img = new Image();
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      mark(ok);
+    };
+    img.decoding = "async";
+    img.onload = () => finish(true);
+    img.onerror = () => finish(false);
+    img.src = p.src;
+    if (img.complete && img.naturalWidth > 0) finish(true);
+  });
+
+  return {
+    getState() {
+      return state;
+    },
+    isReady() {
+      return state.ready || settled();
+    },
+    whenReady() {
+      if (state.ready || settled()) {
+        state.ready = true;
+        return Promise.resolve(state);
+      }
+      return new Promise((resolve) => {
+        state.waiters.push(resolve);
+      });
+    },
+    progress() {
+      if (!state.total) return 1;
+      return (state.loaded + state.failed) / state.total;
+    },
+  };
+})();

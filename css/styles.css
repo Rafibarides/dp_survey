@@ -167,6 +167,179 @@ img {
   width: 100%;
 }
 
+.study-mark {
+  margin: 0 0 36px;
+  width: min(220px, 56vw);
+}
+
+.study-mark__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.study-mark__cell {
+  aspect-ratio: 3 / 4;
+  background: var(--dim);
+  transform-origin: center;
+  animation: cellScan 4.8s var(--ease) infinite;
+}
+
+.study-mark__cell:nth-child(1) { animation-delay: 0s; }
+.study-mark__cell:nth-child(2) { animation-delay: 0.08s; }
+.study-mark__cell:nth-child(3) { animation-delay: 0.16s; }
+.study-mark__cell:nth-child(4) { animation-delay: 0.24s; }
+.study-mark__cell:nth-child(5) { animation-delay: 0.32s; }
+.study-mark__cell:nth-child(6) { animation-delay: 0.4s; }
+.study-mark__cell:nth-child(7) { animation-delay: 0.48s; }
+.study-mark__cell:nth-child(8) { animation-delay: 0.56s; }
+.study-mark__cell:nth-child(9) { animation-delay: 0.64s; }
+.study-mark__cell:nth-child(10) { animation-delay: 0.72s; }
+.study-mark__cell:nth-child(11) { animation-delay: 0.8s; }
+.study-mark__cell:nth-child(12) { animation-delay: 0.88s; }
+.study-mark__cell:nth-child(13) { animation-delay: 0.96s; }
+.study-mark__cell:nth-child(14) { animation-delay: 1.04s; }
+.study-mark__cell:nth-child(15) { animation-delay: 1.12s; }
+.study-mark__cell:nth-child(16) { animation-delay: 1.2s; }
+.study-mark__cell:nth-child(17) { animation-delay: 1.28s; }
+.study-mark__cell:nth-child(18) { animation-delay: 1.36s; }
+.study-mark__cell:nth-child(19) { animation-delay: 1.44s; }
+.study-mark__cell:nth-child(20) { animation-delay: 1.52s; }
+.study-mark__cell:nth-child(21) { animation-delay: 1.6s; }
+.study-mark__cell:nth-child(22) { animation-delay: 1.68s; }
+.study-mark__cell:nth-child(23) { animation-delay: 1.76s; }
+.study-mark__cell:nth-child(24) { animation-delay: 1.84s; }
+.study-mark__cell:nth-child(25) { animation-delay: 1.92s; }
+
+.study-mark__cell.is-pick {
+  background: var(--fg);
+  animation-name: cellPick;
+}
+
+.study-mark__rail {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.study-mark__rail span {
+  aspect-ratio: 3 / 4;
+  background: #171717;
+  animation: railFill 4.8s var(--ease) infinite;
+}
+
+.study-mark__rail span:nth-child(1) { animation-delay: 2.1s; }
+.study-mark__rail span:nth-child(2) { animation-delay: 2.3s; }
+.study-mark__rail span:nth-child(3) { animation-delay: 2.5s; }
+.study-mark__rail span:nth-child(4) { animation-delay: 2.7s; }
+.study-mark__rail span:nth-child(5) { animation-delay: 2.9s; }
+.study-mark__rail span:nth-child(6) { animation-delay: 3.1s; }
+
+@keyframes cellScan {
+  0%,
+  100% {
+    background: var(--dim);
+    transform: scale(1);
+  }
+  12% {
+    background: #6a6a6a;
+    transform: scale(1.04);
+  }
+  24%,
+  100% {
+    background: var(--dim);
+    transform: scale(1);
+  }
+}
+
+@keyframes cellPick {
+  0%,
+  18% {
+    background: var(--dim);
+    transform: scale(1);
+  }
+  28% {
+    background: #9a9a9a;
+    transform: scale(1.06);
+  }
+  40%,
+  78% {
+    background: var(--fg);
+    transform: scale(1);
+  }
+  90%,
+  100% {
+    background: var(--dim);
+    transform: scale(1);
+  }
+}
+
+@keyframes railFill {
+  0%,
+  35% {
+    background: #171717;
+    transform: scale(0.92);
+  }
+  48%,
+  78% {
+    background: var(--fg);
+    transform: scale(1);
+  }
+  90%,
+  100% {
+    background: #171717;
+    transform: scale(0.92);
+  }
+}
+
+.btn.is-loading {
+  opacity: 1;
+  cursor: wait;
+}
+
+.btn__loader {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn.is-loading .btn__label {
+  display: none;
+}
+
+.btn.is-loading .btn__loader {
+  display: inline-flex;
+}
+
+.btn__loader[hidden] {
+  display: none !important;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #555;
+  border-top-color: var(--bg);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.btn.is-loading .spinner {
+  border-color: #999;
+  border-top-color: var(--bg);
+}
+
+.btn__label[hidden] {
+  display: none !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .kicker {
   font-size: 11px;
   text-transform: uppercase;

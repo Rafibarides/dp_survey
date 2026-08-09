@@ -428,7 +428,23 @@
     }
   }
 
-  function start() {
+  function setStartLoading(isLoading) {
+    el.startBtn.classList.toggle("is-loading", isLoading);
+    el.startBtn.disabled = isLoading;
+    el.startBtnLoader.hidden = !isLoading;
+    el.startBtnLabel.hidden = isLoading;
+  }
+
+  function tickIntroPreloadProgress() {
+    if (state.screen !== "intro" || !window.PHOTO_PRELOAD) return;
+    const pct = window.PHOTO_PRELOAD.progress() * 8;
+    el.progressBar.style.width = `${Math.min(8, pct)}%`;
+    if (!window.PHOTO_PRELOAD.isReady()) {
+      requestAnimationFrame(tickIntroPreloadProgress);
+    }
+  }
+
+  function enterStudy() {
     closeLightbox();
     state.order = shuffle(window.PHOTOS.map((p) => p.id));
     state.selected = [];
@@ -452,9 +468,38 @@
       btn.classList.remove("is-ready");
     });
     el.submitBtn.textContent = "Submit response";
+    setStartLoading(false);
     renderSelectGrid();
     showScreen("select");
   }
+
+  async function start() {
+    if (el.startBtn.classList.contains("is-loading")) return;
+    if (!window.PHOTO_PRELOAD || !window.PHOTO_PRELOAD.isReady()) {
+      setStartLoading(true);
+      await window.PHOTO_PRELOAD.whenReady();
+    }
+    enterStudy();
+  }
+
+  function buildIntroMark() {
+    const grid = document.getElementById("studyMarkGrid");
+    if (!grid) return;
+    const picks = new Set([2, 7, 11, 14, 18, 22]);
+    grid.innerHTML = "";
+    for (let i = 0; i < 25; i += 1) {
+      const cell = document.createElement("div");
+      cell.className = "study-mark__cell";
+      if (picks.has(i)) cell.classList.add("is-pick");
+      grid.appendChild(cell);
+    }
+  }
+
+  el.startBtnLabel = document.getElementById("startBtnLabel");
+  el.startBtnLoader = document.getElementById("startBtnLoader");
+
+  buildIntroMark();
+  tickIntroPreloadProgress();
 
   el.startBtn.addEventListener("click", start);
   el.lightboxSelect.addEventListener("click", selectFromLightbox);
@@ -508,13 +553,4 @@
     showScreen("personality");
   });
   el.submitBtn.addEventListener("click", submit);
-
-  // Prefetch from Cloudflare early
-  window.addEventListener("load", () => {
-    window.PHOTOS.forEach((p, i) => {
-      const img = new Image();
-      if (i > 8) img.loading = "lazy";
-      img.src = p.src;
-    });
-  });
 })();
