@@ -25,6 +25,27 @@
     return `${Math.round((n || 0) * 1000) / 10}%`;
   }
 
+  function famRates(data) {
+    const fam = data.familiarity || {};
+    const counts = fam.counts || {};
+    const scored =
+      (counts.knows || 0) +
+      (counts.mixed || 0) +
+      (counts.stranger || 0);
+    const denom = scored || data.n || 0;
+    const rate = (count) => (denom ? count / denom : 0);
+    return {
+      counts,
+      scored,
+      knowsPercent: fam.knowsPercent != null ? fam.knowsPercent : rate(counts.knows || 0),
+      mixedPercent: fam.mixedPercent != null ? fam.mixedPercent : rate(counts.mixed || 0),
+      strangerPercent:
+        fam.strangerPercent != null ? fam.strangerPercent : rate(counts.stranger || 0),
+      avgScore: fam.avgScore,
+      topSixOverlap: fam.topSixOverlap,
+    };
+  }
+
   function score(n) {
     if (n == null || Number.isNaN(n)) return "-";
     return (Math.round(n * 100) / 100).toFixed(2);
@@ -87,11 +108,11 @@
   }
 
   function renderSummary(data) {
-    const fam = data.familiarity || {};
+    const fam = famRates(data);
     const items = [
       ["Total responses", data.n],
-      ["Know you well", pct(fam.knowsPercent || 0)],
-      ["Strangers", pct(fam.strangerPercent || 0)],
+      ["Know you well", `${fam.counts.knows || 0} · ${pct(fam.knowsPercent)}`],
+      ["Strangers", `${fam.counts.stranger || 0} · ${pct(fam.strangerPercent)}`],
       [
         "Knows vs stranger overlap",
         fam.topSixOverlap != null ? `${fam.topSixOverlap} of 6 photos` : "-",
@@ -146,12 +167,13 @@
   }
 
   function renderFamiliarity(data) {
-    const fam = data.familiarity || {};
-    const counts = fam.counts || {};
+    const fam = famRates(data);
+    const counts = fam.counts;
+    const full = data.familiarity || {};
     document.getElementById("familiarityRow").innerHTML = [
-      ["Know you well", `${counts.knows ?? 0} · ${pct(fam.knowsPercent || 0)}`],
-      ["Mixed", `${counts.mixed ?? 0} · ${pct(fam.mixedPercent || 0)}`],
-      ["Stranger", `${counts.stranger ?? 0} · ${pct(fam.strangerPercent || 0)}`],
+      ["Know you well", `${counts.knows ?? 0} · ${pct(fam.knowsPercent)}`],
+      ["Mixed", `${counts.mixed ?? 0} · ${pct(fam.mixedPercent)}`],
+      ["Stranger", `${counts.stranger ?? 0} · ${pct(fam.strangerPercent)}`],
       [
         "Avg familiarity score",
         fam.avgScore != null ? fam.avgScore.toFixed(2) + " / 4" : "-",
@@ -178,16 +200,16 @@
 
     renderOrdered(
       "knowsTopSix",
-      (fam.knowsTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
+      (full.knowsTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
       "No knows-you responses yet."
     );
     renderOrdered(
       "strangerTopSix",
-      (fam.strangerTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
+      (full.strangerTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
       "No stranger responses yet."
     );
 
-    document.getElementById("gapBody").innerHTML = (fam.largestGaps || [])
+    document.getElementById("gapBody").innerHTML = (full.largestGaps || [])
       .map((row) => {
         const p = window.PHOTO_BY_ID[row.id];
         return `
@@ -283,12 +305,12 @@
   }
 
   function renderWildcards(data) {
-    const fam = data.familiarity || {};
+    const fam = famRates(data);
     document.getElementById("wildcardFamiliarityRow").innerHTML = [
-      ["Know you well", pct(fam.knowsPercent || 0)],
-      ["Mixed", pct(fam.mixedPercent || 0)],
-      ["Stranger", pct(fam.strangerPercent || 0)],
-      ["Responses scored", (fam.counts?.knows || 0) + (fam.counts?.mixed || 0) + (fam.counts?.stranger || 0)],
+      ["Know you well", `${fam.counts.knows || 0} · ${pct(fam.knowsPercent)}`],
+      ["Mixed", `${fam.counts.mixed || 0} · ${pct(fam.mixedPercent)}`],
+      ["Stranger", `${fam.counts.stranger || 0} · ${pct(fam.strangerPercent)}`],
+      ["Responses scored", fam.scored],
     ]
       .map(
         ([label, value]) => `
