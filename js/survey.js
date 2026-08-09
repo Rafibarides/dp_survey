@@ -125,6 +125,7 @@
       node.classList.toggle("is-active", node.dataset.screen === name);
     });
     setProgress(name);
+    if (el.scrollCue && name !== "intro") el.scrollCue.hidden = true;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -165,6 +166,55 @@
     el.lightboxImg.removeAttribute("src");
   }
 
+  function bindInspectGestures(tile, id, onTap) {
+    let holdTimer = null;
+    let longPressed = false;
+    let startX = 0;
+    let startY = 0;
+
+    const clearHold = () => {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+    };
+
+    tile.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      longPressed = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      clearHold();
+      holdTimer = setTimeout(() => {
+        longPressed = true;
+        holdTimer = null;
+        if (navigator.vibrate) navigator.vibrate(10);
+        openLightbox(id);
+      }, 340);
+    });
+
+    tile.addEventListener("pointermove", (e) => {
+      if (!holdTimer) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 12) clearHold();
+    });
+
+    tile.addEventListener("pointerup", clearHold);
+    tile.addEventListener("pointercancel", clearHold);
+    tile.addEventListener("pointerleave", clearHold);
+
+    tile.addEventListener("click", (e) => {
+      if (longPressed) {
+        e.preventDefault();
+        e.stopPropagation();
+        longPressed = false;
+        return;
+      }
+      onTap();
+    });
+
+    tile.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
   function renderTray() {
     el.traySlots.innerHTML = "";
     for (let i = 0; i < SELECT_COUNT; i += 1) {
@@ -201,7 +251,7 @@
         mark,
       });
       tile.classList.add("is-pickable");
-      tile.addEventListener("click", () => {
+      bindInspectGestures(tile, id, () => {
         if (selected) deselect(id);
         else openLightbox(id);
       });
@@ -243,6 +293,7 @@
     el.rankList.innerHTML = "";
     const nextRank = state.ranked.length + 1;
     const ids = orderedRankIds();
+    const done = state.ranked.length === SELECT_COUNT;
 
     ids.forEach((id) => {
       const rankIdx = state.ranked.indexOf(id);
@@ -250,28 +301,83 @@
       const li = document.createElement("li");
       li.className = "rank-item";
       if (assigned) li.classList.add("is-assigned");
-      if (!assigned && state.ranked.length < SELECT_COUNT) li.classList.add("is-next");
+      if (!assigned && !done) li.classList.add("is-next");
+      if (done) li.classList.add("is-draggable");
       li.dataset.id = id;
       li.innerHTML = `
         <div class="rank-item__badge">${assigned ? rankIdx + 1 : "·"}</div>
         <div class="rank-item__photo"><img src="${photo(id).src}" alt="" /></div>
         <div class="rank-item__meta">${
-          assigned ? `Ranked #${rankIdx + 1}` : `Tap for #${nextRank}`
+          done
+            ? "Drag to reorder"
+            : assigned
+              ? `Ranked #${rankIdx + 1}`
+              : `Tap for #${nextRank}`
         }</div>
+        <div class="rank-item__grip" aria-hidden="true"></div>
       `;
-      li.addEventListener("click", () => assignRank(id));
+      if (!done) {
+        li.addEventListener("click", () => assignRank(id));
+      } else {
+        bindRankDrag(li);
+      }
       el.rankList.appendChild(li);
     });
 
-    const done = state.ranked.length === SELECT_COUNT;
     el.rankCount.textContent = String(state.ranked.length);
     el.toMustGoBtn.disabled = !done;
     el.toMustGoBtn.classList.toggle("is-ready", done);
     el.rankHint.textContent = done
-      ? "Ranking locked. Continue when ready."
+      ? "Drag to reorder. #1 stays at the top."
       : nextRank === 1
         ? "Tap your single favorite first. Then next strongest, through six."
         : `Tap your number ${nextRank}. Ranked photos rise to the top.`;
+  }
+
+  function bindRankDrag(li) {
+    let active = false;
+
+    li.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      active = true;
+      li.classList.add("is-dragging");
+      try {
+        li.setPointerCapture(e.pointerId);
+      } catch (_) {
+        /* ignore */
+      }
+    });
+
+    li.addEventListener("pointermove", (e) => {
+      if (!active) return;
+      const items = [...el.rankList.querySelectorAll(".rank-item")];
+      const y = e.clientY;
+      let insertBefore = null;
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i];
+        if (item === li) continue;
+        const rect = item.getBoundingClientRect();
+        if (y < rect.top + rect.height / 2) {
+          insertBefore = item;
+          break;
+        }
+      }
+      if (insertBefore) el.rankList.insertBefore(li, insertBefore);
+      else el.rankList.appendChild(li);
+    });
+
+    const endDrag = () => {
+      if (!active) return;
+      active = false;
+      li.classList.remove("is-dragging");
+      state.ranked = [...el.rankList.querySelectorAll(".rank-item")].map(
+        (node) => node.dataset.id
+      );
+      renderRank();
+    };
+
+    li.addEventListener("pointerup", endDrag);
+    li.addEventListener("pointercancel", endDrag);
   }
 
   function assignRank(id) {
@@ -493,9 +599,60 @@
 
   el.startBtnLabel = document.getElementById("startBtnLabel");
   el.startBtnLoader = document.getElementById("startBtnLoader");
+  el.scrollCue = document.getElementById("scrollCue");
+
+  function updateScrollCue(beginVisible) {
+    if (!el.scrollCue) return;
+    if (state.screen !== "intro") {
+      el.scrollCue.hidden = true;
+      return;
+    }
+    const intro = document.querySelector('.screen[data-screen="intro"]');
+    if (!intro) return;
+    const overflow = intro.scrollHeight > intro.clientHeight + 24;
+    el.scrollCue.hidden = !overflow || beginVisible === true;
+  }
+
+  function bindIntroScrollCue() {
+    const intro = document.querySelector('.screen[data-screen="intro"]');
+    if (!intro || !el.scrollCue || !el.startBtn) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        updateScrollCue(Boolean(entry?.isIntersecting));
+      },
+      { root: null, threshold: 0.6 }
+    );
+    io.observe(el.startBtn);
+
+    intro.addEventListener(
+      "scroll",
+      () => {
+        const rect = el.startBtn.getBoundingClientRect();
+        const visible =
+          rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
+        updateScrollCue(visible);
+      },
+      { passive: true }
+    );
+    window.addEventListener("resize", () => {
+      const rect = el.startBtn.getBoundingClientRect();
+      const visible =
+        rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
+      updateScrollCue(visible);
+    });
+    requestAnimationFrame(() => updateScrollCue(false));
+    setTimeout(() => {
+      const rect = el.startBtn.getBoundingClientRect();
+      const visible =
+        rect.top < window.innerHeight && rect.bottom > 0 && rect.height > 0;
+      updateScrollCue(visible);
+    }, 400);
+  }
 
   buildIntroMark();
   setProgress("intro");
+  bindIntroScrollCue();
 
   el.startBtn.addEventListener("click", start);
   el.lightboxSelect.addEventListener("click", selectFromLightbox);

@@ -156,15 +156,23 @@ img {
 }
 
 /* Intro / shared headers */
+.screen[data-screen="intro"] {
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .hero {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   padding: calc(var(--pad) + 28px) var(--pad) 28px;
+  padding-bottom: 120px;
   max-width: 520px;
   margin: 0 auto;
   width: 100%;
+  min-height: calc(100dvh - 96px);
 }
 
 .study-mark {
@@ -385,6 +393,62 @@ img {
   width: 100%;
 }
 
+.footer-cta--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  background: var(--bg);
+  max-width: none;
+  margin: 0;
+}
+
+.footer-cta--sticky .btn {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.scroll-cue {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: cuePulse 1.8s var(--ease) infinite;
+}
+
+.scroll-cue[hidden] {
+  display: none !important;
+}
+
+.scroll-cue__chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+@keyframes cuePulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(4px);
+  }
+}
+
 .btn {
   width: 100%;
   min-height: 54px;
@@ -503,6 +567,9 @@ img {
   background: #111;
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   transition: transform var(--fast) var(--ease), filter var(--fast) var(--ease),
     opacity var(--fast) var(--ease);
 }
@@ -511,6 +578,10 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   transition: transform var(--med) var(--ease), filter var(--med) var(--ease);
 }
 
@@ -628,21 +699,38 @@ img {
 }
 
 /* Rank screen */
+.screen[data-screen="rank"] {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.screen[data-screen="rank"] .chrome {
+  flex-shrink: 0;
+}
+
 .rank-list {
   list-style: none;
   margin: 0;
-  padding: 8px var(--pad) 120px;
+  padding: 8px var(--pad) 16px;
   display: grid;
   gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .rank-item {
   display: grid;
-  grid-template-columns: 40px 72px 1fr;
+  grid-template-columns: 40px 72px 1fr 18px;
   gap: 12px;
   align-items: center;
   cursor: pointer;
   touch-action: manipulation;
+  background: #111;
+  padding: 8px;
   transition: opacity var(--fast) var(--ease), transform var(--med) var(--ease);
 }
 
@@ -656,6 +744,18 @@ img {
 
 .rank-item.is-next {
   opacity: 1;
+}
+
+.rank-item.is-draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.rank-item.is-dragging {
+  opacity: 0.92;
+  transform: scale(1.02);
+  z-index: 2;
+  cursor: grabbing;
 }
 
 .rank-item__badge {
@@ -680,7 +780,7 @@ img {
   width: 72px;
   height: 72px;
   overflow: hidden;
-  background: #111;
+  background: #0a0a0a;
 }
 
 .rank-item__photo img {
@@ -688,6 +788,7 @@ img {
   height: 100%;
   object-fit: cover;
   object-position: center top;
+  pointer-events: none;
 }
 
 .rank-item__meta {
@@ -699,11 +800,27 @@ img {
   color: var(--fg);
 }
 
+.rank-item__grip {
+  width: 18px;
+  height: 14px;
+  justify-self: end;
+  background:
+    linear-gradient(var(--muted), var(--muted)) 0 0 / 100% 2px no-repeat,
+    linear-gradient(var(--muted), var(--muted)) 0 6px / 100% 2px no-repeat,
+    linear-gradient(var(--muted), var(--muted)) 0 12px / 100% 2px no-repeat;
+  opacity: 0;
+}
+
+.rank-item.is-draggable .rank-item__grip {
+  opacity: 0.7;
+}
+
 .rank-actions {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
+  flex-shrink: 0;
+  left: auto;
+  right: auto;
+  bottom: auto;
   padding: var(--pad);
   padding-bottom: calc(var(--pad) + env(safe-area-inset-bottom));
   background: var(--bg);
