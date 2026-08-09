@@ -110,6 +110,11 @@
   }
 
   function setProgress(screen) {
+    // Stay empty on intro so preload never looks like a page load.
+    if (screen === "intro") {
+      el.progressBar.style.width = "0%";
+      return;
+    }
     const idx = Math.max(0, SCREENS.indexOf(screen));
     el.progressBar.style.width = `${(idx / (SCREENS.length - 1)) * 100}%`;
   }
@@ -435,15 +440,6 @@
     el.startBtnLabel.hidden = isLoading;
   }
 
-  function tickIntroPreloadProgress() {
-    if (state.screen !== "intro" || !window.PHOTO_PRELOAD) return;
-    const pct = window.PHOTO_PRELOAD.progress() * 8;
-    el.progressBar.style.width = `${Math.min(8, pct)}%`;
-    if (!window.PHOTO_PRELOAD.isReady()) {
-      requestAnimationFrame(tickIntroPreloadProgress);
-    }
-  }
-
   function enterStudy() {
     closeLightbox();
     state.order = shuffle(window.PHOTOS.map((p) => p.id));
@@ -499,7 +495,7 @@
   el.startBtnLoader = document.getElementById("startBtnLoader");
 
   buildIntroMark();
-  tickIntroPreloadProgress();
+  setProgress("intro");
 
   el.startBtn.addEventListener("click", start);
   el.lightboxSelect.addEventListener("click", selectFromLightbox);
