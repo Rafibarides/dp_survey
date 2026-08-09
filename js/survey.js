@@ -9,7 +9,6 @@
     { value: 4, label: "Very accurately" },
   ];
 
-  // Option order is shuffled per session. Correctness is never shown to the respondent.
   const FOOD_OPTIONS = [
     { id: "bagel", label: "A bagel toasted with avocados and tomatoes" },
     { id: "chicken_parm", label: "Chicken Parm with salad" },
@@ -42,6 +41,7 @@
     phraseOrder: [],
     appearance: null,
     personality: null,
+    inspectId: null,
     startedAt: 0,
     screen: "intro",
   };
@@ -78,6 +78,10 @@
     topNote: document.getElementById("topNote"),
     doneStatus: document.getElementById("doneStatus"),
     doneError: document.getElementById("doneError"),
+    lightbox: document.getElementById("lightbox"),
+    lightboxImg: document.getElementById("lightboxImg"),
+    lightboxSelect: document.getElementById("lightboxSelect"),
+    lightboxNevermind: document.getElementById("lightboxNevermind"),
   };
 
   const SCREENS = [
@@ -107,8 +111,7 @@
 
   function setProgress(screen) {
     const idx = Math.max(0, SCREENS.indexOf(screen));
-    const pct = (idx / (SCREENS.length - 1)) * 100;
-    el.progressBar.style.width = `${pct}%`;
+    el.progressBar.style.width = `${(idx / (SCREENS.length - 1)) * 100}%`;
   }
 
   function showScreen(name) {
@@ -135,6 +138,28 @@
     return btn;
   }
 
+  function openLightbox(id) {
+    state.inspectId = id;
+    el.lightboxImg.src = photo(id).src;
+    el.lightbox.hidden = false;
+    document.body.classList.add("lightbox-open");
+    const already = state.selected.includes(id);
+    const full = state.selected.length >= SELECT_COUNT;
+    el.lightboxSelect.disabled = already || full;
+    el.lightboxSelect.textContent = already
+      ? "Already selected"
+      : full
+        ? "Shortlist full"
+        : "Select";
+  }
+
+  function closeLightbox() {
+    state.inspectId = null;
+    el.lightbox.hidden = true;
+    document.body.classList.remove("lightbox-open");
+    el.lightboxImg.removeAttribute("src");
+  }
+
   function renderTray() {
     el.traySlots.innerHTML = "";
     for (let i = 0; i < SELECT_COUNT; i += 1) {
@@ -145,7 +170,7 @@
         slot.classList.add("is-filled");
         slot.dataset.id = id;
         slot.innerHTML = `<img src="${photo(id).src}" alt="" />`;
-        slot.addEventListener("click", () => toggleSelect(id));
+        slot.addEventListener("click", () => deselect(id));
       } else {
         slot.innerHTML = `<div class="slot__num">${i + 1}</div>`;
       }
@@ -163,37 +188,58 @@
     el.selectGrid.innerHTML = "";
     const full = state.selected.length === SELECT_COUNT;
     state.order.forEach((id) => {
-      const p = photo(id);
       const selected = state.selected.includes(id);
       const mark = selected ? String(state.selected.indexOf(id) + 1) : "";
-      const tile = makeTile(p, {
+      const tile = makeTile(photo(id), {
         selected,
         dimmed: full && !selected,
         mark,
       });
-      if (full && !selected) tile.classList.add("is-locked");
-      else tile.classList.add("is-pickable");
-      tile.addEventListener("click", () => toggleSelect(id));
+      tile.classList.add("is-pickable");
+      tile.addEventListener("click", () => {
+        if (selected) deselect(id);
+        else openLightbox(id);
+      });
       el.selectGrid.appendChild(tile);
     });
     renderTray();
   }
 
-  function toggleSelect(id) {
-    const idx = state.selected.indexOf(id);
-    if (idx >= 0) {
-      state.selected.splice(idx, 1);
-    } else if (state.selected.length < SELECT_COUNT) {
-      state.selected.push(id);
-      if (navigator.vibrate) navigator.vibrate(8);
+  function selectFromLightbox() {
+    const id = state.inspectId;
+    if (!id) return;
+    if (state.selected.includes(id)) {
+      closeLightbox();
+      return;
     }
+    if (state.selected.length >= SELECT_COUNT) return;
+    state.selected.push(id);
+    if (navigator.vibrate) navigator.vibrate(8);
+    closeLightbox();
     renderSelectGrid();
+  }
+
+  function deselect(id) {
+    const idx = state.selected.indexOf(id);
+    if (idx < 0) return;
+    state.selected.splice(idx, 1);
+    // If it was already ranked, drop ranking so tray and ranks stay consistent
+    state.ranked = state.ranked.filter((rid) => rid !== id);
+    renderSelectGrid();
+  }
+
+  function orderedRankIds() {
+    const assigned = state.ranked.slice();
+    const unassigned = state.selected.filter((id) => !state.ranked.includes(id));
+    return assigned.concat(unassigned);
   }
 
   function renderRank() {
     el.rankList.innerHTML = "";
     const nextRank = state.ranked.length + 1;
-    state.selected.forEach((id) => {
+    const ids = orderedRankIds();
+
+    ids.forEach((id) => {
       const rankIdx = state.ranked.indexOf(id);
       const assigned = rankIdx >= 0;
       const li = document.createElement("li");
@@ -202,8 +248,11 @@
       if (!assigned && state.ranked.length < SELECT_COUNT) li.classList.add("is-next");
       li.dataset.id = id;
       li.innerHTML = `
-        <div class="rank-item__badge">${assigned ? rankIdx + 1 : nextRank}</div>
+        <div class="rank-item__badge">${assigned ? rankIdx + 1 : "·"}</div>
         <div class="rank-item__photo"><img src="${photo(id).src}" alt="" /></div>
+        <div class="rank-item__meta">${
+          assigned ? `Ranked #${rankIdx + 1}` : `Tap for #${nextRank}`
+        }</div>
       `;
       li.addEventListener("click", () => assignRank(id));
       el.rankList.appendChild(li);
@@ -217,7 +266,7 @@
       ? "Ranking locked. Continue when ready."
       : nextRank === 1
         ? "Tap your single favorite first. Then next strongest, through six."
-        : `Tap your number ${nextRank}.`;
+        : `Tap your number ${nextRank}. Ranked photos rise to the top.`;
   }
 
   function assignRank(id) {
@@ -235,12 +284,13 @@
 
   function renderMustGo() {
     el.mustGoGrid.innerHTML = "";
-    state.order.forEach((id) => {
+    const pool = state.order.filter((id) => !state.selected.includes(id));
+    pool.forEach((id) => {
       const selected = state.mustGo === id;
       const tile = makeTile(photo(id), {
         selected,
         dimmed: state.mustGo && !selected,
-        mark: selected ? "X" : "",
+        mark: selected ? "NO" : "",
       });
       tile.addEventListener("click", () => {
         state.mustGo = id;
@@ -379,6 +429,7 @@
   }
 
   function start() {
+    closeLightbox();
     state.order = shuffle(window.PHOTOS.map((p) => p.id));
     state.selected = [];
     state.ranked = [];
@@ -390,22 +441,31 @@
     state.appearance = null;
     state.personality = null;
     state.startedAt = Date.now();
-    el.toFoodBtn.disabled = true;
-    el.toFoodBtn.classList.remove("is-ready");
-    el.toPhraseBtn.disabled = true;
-    el.toPhraseBtn.classList.remove("is-ready");
-    el.toAppearanceBtn.disabled = true;
-    el.toAppearanceBtn.classList.remove("is-ready");
-    el.toPersonalityBtn.disabled = true;
-    el.toPersonalityBtn.classList.remove("is-ready");
-    el.submitBtn.disabled = true;
-    el.submitBtn.classList.remove("is-ready");
+    [
+      el.toFoodBtn,
+      el.toPhraseBtn,
+      el.toAppearanceBtn,
+      el.toPersonalityBtn,
+      el.submitBtn,
+    ].forEach((btn) => {
+      btn.disabled = true;
+      btn.classList.remove("is-ready");
+    });
     el.submitBtn.textContent = "Submit response";
     renderSelectGrid();
     showScreen("select");
   }
 
   el.startBtn.addEventListener("click", start);
+  el.lightboxSelect.addEventListener("click", selectFromLightbox);
+  el.lightboxNevermind.addEventListener("click", closeLightbox);
+  el.lightbox.addEventListener("click", (e) => {
+    if (e.target === el.lightbox) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !el.lightbox.hidden) closeLightbox();
+  });
+
   el.toRankBtn.addEventListener("click", () => {
     state.ranked = [];
     renderRank();
@@ -413,6 +473,9 @@
   });
   el.resetRankBtn.addEventListener("click", resetRank);
   el.toMustGoBtn.addEventListener("click", () => {
+    state.mustGo = null;
+    el.toFoodBtn.disabled = true;
+    el.toFoodBtn.classList.remove("is-ready");
     renderMustGo();
     showScreen("mustgo");
   });
@@ -446,9 +509,11 @@
   });
   el.submitBtn.addEventListener("click", submit);
 
+  // Prefetch from Cloudflare early
   window.addEventListener("load", () => {
-    window.PHOTOS.slice(0, 9).forEach((p) => {
+    window.PHOTOS.forEach((p, i) => {
       const img = new Image();
+      if (i > 8) img.loading = "lazy";
       img.src = p.src;
     });
   });

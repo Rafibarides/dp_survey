@@ -86,7 +86,7 @@ Open `http://localhost:8080`. Submissions stay local until `SCRIPT_URL` is set.
 
 ## Notes
 
-- Images in `/images` are mobile-optimized (~2MB total). Originals remain in the R2 bucket.
+- Images load from Cloudflare R2 (`…/opt/DP_N.jpg`), mobile-optimized (~2MB total). Local `/images` copies are optional fallbacks only.
 - Responses are anonymous. No login.
 - Rotate any keys that were shared in chat before public launch.
 - Re-deploy the Apps Script after changing `ADMIN_KEY`.

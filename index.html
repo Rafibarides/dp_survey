@@ -11,6 +11,8 @@
     <title>Visual Preference Study</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://pub-12ef38a931494afd92935aacaf61a4f8.r2.dev" crossorigin />
+    <link rel="dns-prefetch" href="https://pub-12ef38a931494afd92935aacaf61a4f8.r2.dev" />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap"
       rel="stylesheet"
@@ -20,6 +22,18 @@
   <body>
     <div class="progress" aria-hidden="true">
       <div class="progress__bar" id="progressBar"></div>
+    </div>
+
+    <div class="lightbox" id="lightbox" hidden>
+      <div class="lightbox__frame">
+        <img id="lightboxImg" alt="" />
+      </div>
+      <div class="lightbox__actions">
+        <button class="btn" type="button" id="lightboxSelect">Select</button>
+        <button class="btn btn--ghost" type="button" id="lightboxNevermind">
+          Nevermind
+        </button>
+      </div>
     </div>
 
     <main class="app" id="app">
@@ -52,7 +66,7 @@
             </div>
           </div>
           <p class="chrome__hint">
-            Tap the six photos you think are strongest.
+            Tap a photo to inspect it. Select the six you think are strongest.
           </p>
         </header>
         <div class="grid-wrap">
@@ -97,8 +111,12 @@
             <div class="chrome__title">Exclusion</div>
             <div class="chrome__count">1<em>/5</em></div>
           </div>
-          <p class="chrome__hint">
-            Which photo is a complete no. The one that must not make the set.
+          <p class="chrome__hint chrome__hint--strong">
+            Which photo is a complete <span class="no-mark">NO</span>.
+          </p>
+          <p class="chrome__subhint">
+            This can be the immediate left swipe worthy photo, or just your
+            least favorite from the set.
           </p>
         </header>
         <div class="question-body">
@@ -153,7 +171,7 @@
             <div class="chrome__count">4<em>/5</em></div>
           </div>
           <p class="chrome__hint">
-            Do these photos accurately represent this person's appearance?
+            Do these photos accurately represent Rafi's appearance?
           </p>
         </header>
         <div class="scale" id="appearanceScale"></div>
@@ -172,8 +190,8 @@
             <div class="chrome__count">5<em>/5</em></div>
           </div>
           <p class="chrome__hint">
-            Based on how you know them, do these photos accurately represent
-            their personality, vibe, and energy?
+            Based on how you know Rafi, do these photos accurately represent
+            Rafi's personality, vibe, and energy?
           </p>
         </header>
         <div class="scale" id="personalityScale"></div>
