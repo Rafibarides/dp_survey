@@ -11,6 +11,7 @@
     <title>Study Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://pub-12ef38a931494afd92935aacaf61a4f8.r2.dev" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap"
       rel="stylesheet"
@@ -22,9 +23,9 @@
       <div class="kicker">Internal</div>
       <h1>Results dashboard</h1>
       <p class="admin__sub">
-        Selection consensus weighted over rank enthusiasm. Familiarity is
-        inferred quietly from diagnostic asides, then used to compare people
-        who know you against strangers.
+        Read this as a lab readout, not a beauty contest. Selection rate is the
+        main signal. Ranking breaks ties. Familiarity is inferred from the food
+        and phrase asides, never shown to respondents.
       </p>
 
       <section class="admin-gate" id="adminGate">
@@ -42,24 +43,68 @@
       <section class="admin-stats" id="adminStats">
         <div class="stat-row" id="summaryRow"></div>
 
+        <section class="section section--hero-result">
+          <h2>Overall top six</h2>
+          <p class="section__help">
+            The set across every respondent. Ordered by final score
+            (70% how often selected into the top six, 30% how strongly ranked
+            when selected). #1 is the strongest consensus pick.
+          </p>
+          <div class="ordered-six" id="topSix"></div>
+        </section>
+
         <section class="section">
-          <h2>Familiarity split</h2>
+          <h2>Least familiar top six</h2>
+          <p class="section__help" id="leastFamiliarHelp">
+            Exact ranked shortlist from the respondent with the lowest
+            familiarity score. If several people tie for lowest, their picks are
+            pooled. The stranger group consensus sits underneath for comparison.
+          </p>
+          <div class="ordered-six" id="leastFamiliarSix"></div>
+          <div id="leastFamiliarStrangerWrap" hidden>
+            <h3 class="section__subhead">Stranger group consensus</h3>
+            <p class="section__help">
+              Aggregate top six from everyone scored as a stranger. Useful when
+              more than one person tied for knowing you least.
+            </p>
+            <div class="ordered-six" id="leastFamiliarStrangerSix"></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>How well do people know you?</h2>
+          <p class="section__help">
+            Built from the two diagnostic asides. Bagel + your real phrases push
+            the score up. Mushroom soup + the stiff goodbye push it down.
+            Score 3 to 4 counts as knows you well.
+          </p>
           <div class="stat-row" id="familiarityRow"></div>
-          <p class="admin__sub" id="familiarityNote" style="margin-top: 8px"></p>
+          <p class="admin__sub" id="familiarityNote"></p>
         </section>
 
         <section class="section">
           <h2>Top six if they know you</h2>
-          <div class="top-grid" id="knowsTopSix"></div>
+          <p class="section__help">
+            Same scoring as overall, but only among respondents scored as
+            knowing you.
+          </p>
+          <div class="ordered-six" id="knowsTopSix"></div>
         </section>
 
         <section class="section">
           <h2>Top six from strangers</h2>
-          <div class="top-grid" id="strangerTopSix"></div>
+          <p class="section__help">
+            Same scoring, only among respondents scored as strangers.
+          </p>
+          <div class="ordered-six" id="strangerTopSix"></div>
         </section>
 
         <section class="section">
           <h2>Biggest taste gaps</h2>
+          <p class="section__help">
+            Photos where people who know you and strangers disagree most.
+            Positive delta means the knows-you group selects it more.
+          </p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -76,27 +121,41 @@
         </section>
 
         <section class="section">
-          <h2>Consensus top six</h2>
-          <div class="top-grid" id="topSix"></div>
-        </section>
-
-        <section class="section">
-          <h2>Most number one</h2>
+          <h2>Most common number one</h2>
+          <p class="section__help">
+            Which photo people crown as their single favorite most often. This
+            can differ from the overall top six if a polarizing photo is loved
+            by a minority.
+          </p>
           <div class="top-grid" id="mostNumberOne"></div>
         </section>
 
         <section class="section">
           <h2>Weakest performers</h2>
+          <p class="section__help">
+            Lowest final scores. Rarely shortlisted, or shortlisted but ranked
+            weakly.
+          </p>
           <div class="top-grid" id="weakest"></div>
         </section>
 
         <section class="section">
           <h2>Highest polarization</h2>
+          <p class="section__help">
+            Highest disagreement. People either put these high or ignore them.
+            Low polarization means stable consensus.
+          </p>
           <div class="top-grid" id="polarized"></div>
         </section>
 
         <section class="section">
           <h2>Full table</h2>
+          <p class="section__help">
+            Selected % = put in top six. Avg rank = mean rank among people who
+            selected it (1 is best). #1 % = named favorite. Final score =
+            0.7 selected + 0.3 rank strength. Polarization = spread of
+            evaluations.
+          </p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -116,27 +175,31 @@
 
         <section class="section">
           <h2>Wildcard signals</h2>
-          <div class="wildcard-block">
-            <div>
-              <div class="stat__label" style="margin-bottom: 10px">
-                Absolute must go
-              </div>
-              <div class="bar-list" id="mustGoBars"></div>
-            </div>
-            <div>
-              <div class="stat__label" style="margin-bottom: 10px">
-                Food aside
-              </div>
-              <div class="bar-list" id="foodBars"></div>
-            </div>
-            <div>
-              <div class="stat__label" style="margin-bottom: 10px">
-                Phrase aside
-              </div>
-              <div class="bar-list" id="phraseBars"></div>
-            </div>
-            <div class="stat-row" id="calibRow"></div>
-          </div>
+          <p class="section__help">
+            Extra questions after ranking. Familiarity percent below is the
+            share scored as knowing you well.
+          </p>
+          <div class="stat-row" id="wildcardFamiliarityRow"></div>
+
+          <h3 class="section__subhead">Absolute must go</h3>
+          <p class="section__help">
+            Photos named as a complete no. Ordered by how often they were
+            chosen.
+          </p>
+          <div class="ordered-six" id="mustGoPhotos"></div>
+
+          <h3 class="section__subhead">Food aside</h3>
+          <div class="bar-list" id="foodBars"></div>
+
+          <h3 class="section__subhead">Phrase aside</h3>
+          <div class="bar-list" id="phraseBars"></div>
+
+          <h3 class="section__subhead">Calibration</h3>
+          <p class="section__help">
+            Direct ratings of whether the set looks and feels like Rafi.
+            Yes+ means score 3 or 4.
+          </p>
+          <div class="stat-row" id="calibRow"></div>
         </section>
       </section>
     </main>

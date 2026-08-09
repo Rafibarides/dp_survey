@@ -531,6 +531,74 @@ function computeAdmin_() {
     return a.deltaSelection - b.deltaSelection;
   }).slice(0, 6);
 
+  var scored = [];
+  for (var s = 0; s < responses.length; s++) {
+    if (responses[s].familiarityScore != null && !isNaN(responses[s].familiarityScore)) {
+      scored.push(responses[s]);
+    }
+  }
+
+  var leastFamiliar = null;
+  if (scored.length) {
+    var minScore = scored[0].familiarityScore;
+    for (var m = 1; m < scored.length; m++) {
+      if (scored[m].familiarityScore < minScore) minScore = scored[m].familiarityScore;
+    }
+    var tied = [];
+    for (var t = 0; t < scored.length; t++) {
+      if (scored[t].familiarityScore === minScore) tied.push(scored[t]);
+    }
+
+    var orderedTop = [];
+    if (tied.length === 1) {
+      for (var r = 0; r < tied[0].ranked.length; r++) {
+        orderedTop.push({
+          id: tied[0].ranked[r],
+          rank: r + 1,
+          selectionRate: null,
+          finalScore: null
+        });
+      }
+    } else {
+      var tiedStats = computePhotoStats_(tied);
+      for (var x = 0; x < SELECT_COUNT && x < tiedStats.photos.length; x++) {
+        orderedTop.push({
+          id: tiedStats.photos[x].id,
+          rank: x + 1,
+          selectionRate: tiedStats.photos[x].selectionRate,
+          finalScore: tiedStats.photos[x].finalScore
+        });
+      }
+    }
+
+    leastFamiliar = {
+      minScore: minScore,
+      tiedCount: tied.length,
+      source: tied.length === 1 ? "single" : "tie",
+      topSix: orderedTop,
+      strangerGroupTopSix: strangerStats.photos.slice(0, SELECT_COUNT).map(function (p, idx) {
+        return {
+          id: p.id,
+          rank: idx + 1,
+          selectionRate: p.selectionRate,
+          finalScore: p.finalScore
+        };
+      })
+    };
+  }
+
+  var knownN = knows.length + mixed.length + strangers.length;
+  var knowsPercent = knownN ? knows.length / knownN : 0;
+  var strangerPercent = knownN ? strangers.length / knownN : 0;
+
+  var mustGoWithRate = mustGo.map(function (item) {
+    return {
+      id: item.id,
+      count: item.count,
+      rate: computed.n ? item.count / computed.n : 0
+    };
+  });
+
   return {
     n: computed.n,
     photos: photos,
@@ -538,7 +606,7 @@ function computeAdmin_() {
     mostNumberOne: mostNumberOne,
     weakest: weakest,
     mostPolarized: mostPolarized,
-    mustGo: mustGo,
+    mustGo: mustGoWithRate,
     foodAnswers: countAnswers_(responses, "food"),
     phraseAnswers: countAnswers_(responses, "phrase"),
     calibration: {
@@ -547,8 +615,12 @@ function computeAdmin_() {
       appearancePositiveRate: positiveRate(appearanceVals),
       personalityPositiveRate: positiveRate(personalityVals)
     },
+    leastFamiliar: leastFamiliar,
     familiarity: {
       avgScore: famScores.length ? mean_(famScores) : null,
+      knowsPercent: knowsPercent,
+      strangerPercent: strangerPercent,
+      mixedPercent: knownN ? mixed.length / knownN : 0,
       counts: {
         knows: knows.length,
         mixed: mixed.length,
@@ -565,6 +637,13 @@ function computeAdmin_() {
     weights: {
       selection: SELECTION_WEIGHT,
       rank: RANK_WEIGHT
+    },
+    glossary: {
+      selectionRate: "Share of all respondents who put this photo in their top 6.",
+      finalScore: "0.7 x selection rate + 0.3 x rank strength. Consensus beats enthusiasm.",
+      numberOneRate: "Share of respondents who ranked this photo as their single favorite.",
+      polarization: "How split people are. Low = agreement. High = love-it or leave-it.",
+      familiarity: "Secret score from food + phrase asides. 3-4 = knows you, 0-1 = stranger."
     }
   };
 }

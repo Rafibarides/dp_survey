@@ -22,10 +22,11 @@
   };
 
   function pct(n) {
-    return `${Math.round(n * 1000) / 10}%`;
+    return `${Math.round((n || 0) * 1000) / 10}%`;
   }
 
   function score(n) {
+    if (n == null || Number.isNaN(n)) return "-";
     return (Math.round(n * 100) / 100).toFixed(2);
   }
 
@@ -55,15 +56,45 @@
     `;
   }
 
+  function orderedCard(row, index) {
+    const p = window.PHOTO_BY_ID[row.id];
+    if (!p) return "";
+    const rank = row.rank || index + 1;
+    const bits = [];
+    if (row.selectionRate != null) bits.push(`${pct(row.selectionRate)} selected`);
+    if (row.finalScore != null) bits.push(`score ${score(row.finalScore)}`);
+    if (row.rate != null) bits.push(`${pct(row.rate)} of responses`);
+    if (row.count != null && row.rate == null) bits.push(`${row.count} votes`);
+    return `
+      <article class="ordered-card">
+        <div class="ordered-card__rank">${rank}</div>
+        <img src="${p.src}" alt="Photo ${p.label}" loading="lazy" />
+        <div class="ordered-card__meta">
+          <strong>Photo ${p.label}</strong>
+          <span>${bits.join(" · ") || "Ranked pick"}</span>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderOrdered(elId, rows, emptyText) {
+    const node = document.getElementById(elId);
+    if (!rows || !rows.length) {
+      node.innerHTML = `<p class="admin__sub">${emptyText}</p>`;
+      return;
+    }
+    node.innerHTML = rows.map((row, i) => orderedCard(row, i)).join("");
+  }
+
   function renderSummary(data) {
     const fam = data.familiarity || {};
     const items = [
-      ["Responses", data.n],
-      ["Knows you", fam.counts?.knows ?? 0],
-      ["Strangers", fam.counts?.stranger ?? 0],
+      ["Total responses", data.n],
+      ["Know you well", pct(fam.knowsPercent || 0)],
+      ["Strangers", pct(fam.strangerPercent || 0)],
       [
-        "Top-six overlap",
-        fam.topSixOverlap != null ? `${fam.topSixOverlap}/6` : "-",
+        "Knows vs stranger overlap",
+        fam.topSixOverlap != null ? `${fam.topSixOverlap} of 6 photos` : "-",
       ],
     ];
     document.getElementById("summaryRow").innerHTML = items
@@ -77,15 +108,52 @@
       .join("");
   }
 
+  function renderLeastFamiliar(data) {
+    const lf = data.leastFamiliar;
+    const help = document.getElementById("leastFamiliarHelp");
+    const wrap = document.getElementById("leastFamiliarStrangerWrap");
+
+    if (!lf) {
+      help.textContent =
+        "No familiarity scores yet. Once people answer the food and phrase asides, the least-familiar shortlist appears here.";
+      renderOrdered("leastFamiliarSix", [], "No least-familiar shortlist yet.");
+      wrap.hidden = true;
+      return;
+    }
+
+    if (lf.source === "single") {
+      help.textContent = `Exact #1 through #6 from the single respondent with the lowest familiarity score (${lf.minScore} of 4). This is what someone who knows you least actually picked.`;
+    } else {
+      help.textContent = `${lf.tiedCount} respondents tied for the lowest familiarity score (${lf.minScore} of 4). Their shortlists are pooled into one ordered set below, then compared with the full stranger group.`;
+    }
+
+    renderOrdered(
+      "leastFamiliarSix",
+      lf.topSix,
+      "No least-familiar shortlist yet."
+    );
+
+    const showStranger =
+      lf.source === "tie" || (lf.strangerGroupTopSix && lf.strangerGroupTopSix.length);
+    wrap.hidden = !showStranger;
+    if (showStranger) {
+      renderOrdered(
+        "leastFamiliarStrangerSix",
+        lf.strangerGroupTopSix || [],
+        "No stranger group shortlist yet."
+      );
+    }
+  }
+
   function renderFamiliarity(data) {
     const fam = data.familiarity || {};
     const counts = fam.counts || {};
     document.getElementById("familiarityRow").innerHTML = [
-      ["Knows", counts.knows ?? 0],
-      ["Mixed", counts.mixed ?? 0],
-      ["Stranger", counts.stranger ?? 0],
+      ["Know you well", `${counts.knows ?? 0} · ${pct(fam.knowsPercent || 0)}`],
+      ["Mixed", `${counts.mixed ?? 0} · ${pct(fam.mixedPercent || 0)}`],
+      ["Stranger", `${counts.stranger ?? 0} · ${pct(fam.strangerPercent || 0)}`],
       [
-        "Avg familiarity",
+        "Avg familiarity score",
         fam.avgScore != null ? fam.avgScore.toFixed(2) + " / 4" : "-",
       ],
     ]
@@ -108,25 +176,16 @@
             ? "Partial agreement. Some photographs diverge by familiarity."
             : "Strong split. Strangers and people who know you are choosing different photographs.";
 
-    document.getElementById("knowsTopSix").innerHTML = (fam.knowsTopSix || [])
-      .map((row) =>
-        photoCard(
-          row,
-          `${pct(row.selectionRate)} selected · score ${score(row.finalScore)}`
-        )
-      )
-      .join("") || "<p class='admin__sub'>No knows-you responses yet.</p>";
-
-    document.getElementById("strangerTopSix").innerHTML = (
-      fam.strangerTopSix || []
-    )
-      .map((row) =>
-        photoCard(
-          row,
-          `${pct(row.selectionRate)} selected · score ${score(row.finalScore)}`
-        )
-      )
-      .join("") || "<p class='admin__sub'>No stranger responses yet.</p>";
+    renderOrdered(
+      "knowsTopSix",
+      (fam.knowsTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
+      "No knows-you responses yet."
+    );
+    renderOrdered(
+      "strangerTopSix",
+      (fam.strangerTopSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
+      "No stranger responses yet."
+    );
 
     document.getElementById("gapBody").innerHTML = (fam.largestGaps || [])
       .map((row) => {
@@ -148,21 +207,18 @@
   }
 
   function renderGrids(data) {
-    document.getElementById("topSix").innerHTML = data.topSix
-      .map((row) =>
-        photoCard(
-          row,
-          `${pct(row.selectionRate)} selected · score ${score(row.finalScore)}`
-        )
-      )
-      .join("");
+    renderOrdered(
+      "topSix",
+      (data.topSix || []).map((row, i) => ({ ...row, rank: i + 1 })),
+      "No responses yet."
+    );
 
-    document.getElementById("mostNumberOne").innerHTML = data.mostNumberOne
+    document.getElementById("mostNumberOne").innerHTML = (data.mostNumberOne || [])
       .slice(0, 3)
       .map((row) => photoCard(row, `${pct(row.numberOneRate)} chose as #1`))
       .join("");
 
-    document.getElementById("weakest").innerHTML = data.weakest
+    document.getElementById("weakest").innerHTML = (data.weakest || [])
       .slice(0, 3)
       .map((row) =>
         photoCard(
@@ -172,7 +228,7 @@
       )
       .join("");
 
-    document.getElementById("polarized").innerHTML = data.mostPolarized
+    document.getElementById("polarized").innerHTML = (data.mostPolarized || [])
       .slice(0, 3)
       .map((row) => {
         const p = polarLabel(row.polarization);
@@ -182,7 +238,7 @@
   }
 
   function renderTable(rows) {
-    document.getElementById("tableBody").innerHTML = rows
+    document.getElementById("tableBody").innerHTML = (rows || [])
       .map((row) => {
         const p = window.PHOTO_BY_ID[row.id];
         const pol = polarLabel(row.polarization);
@@ -209,40 +265,50 @@
   }
 
   function renderBars(elId, items, labels) {
-    const max = Math.max(...items.map((m) => m.count), 1);
-    document.getElementById(elId).innerHTML = items
-      .map((m) => {
-        const label = labels[m.id] || m.id;
-        return `
+    const list = items || [];
+    const max = Math.max(...list.map((m) => m.count), 1);
+    document.getElementById(elId).innerHTML = list.length
+      ? list
+          .map((m) => {
+            const label = labels[m.id] || m.id;
+            return `
           <div class="bar-row">
             <span title="${label}">${label}</span>
             <div class="bar-track"><span style="width:${(m.count / max) * 100}%"></span></div>
             <span>${m.count}</span>
           </div>`;
-      })
-      .join("");
+          })
+          .join("")
+      : "<p class='admin__sub'>No answers yet.</p>";
   }
 
   function renderWildcards(data) {
-    const must = data.mustGo || [];
-    const max = Math.max(...must.map((m) => m.count), 1);
-    document.getElementById("mustGoBars").innerHTML = must
-      .slice(0, 8)
-      .map((m) => {
-        const p = window.PHOTO_BY_ID[m.id];
-        return `
-          <div class="bar-row">
-            <span>${p ? p.label : m.id}</span>
-            <div class="bar-track"><span style="width:${(m.count / max) * 100}%"></span></div>
-            <span>${m.count}</span>
-          </div>`;
-      })
+    const fam = data.familiarity || {};
+    document.getElementById("wildcardFamiliarityRow").innerHTML = [
+      ["Know you well", pct(fam.knowsPercent || 0)],
+      ["Mixed", pct(fam.mixedPercent || 0)],
+      ["Stranger", pct(fam.strangerPercent || 0)],
+      ["Responses scored", (fam.counts?.knows || 0) + (fam.counts?.mixed || 0) + (fam.counts?.stranger || 0)],
+    ]
+      .map(
+        ([label, value]) => `
+        <div class="stat">
+          <div class="stat__label">${label}</div>
+          <div class="stat__value">${value}</div>
+        </div>`
+      )
       .join("");
+
+    const must = (data.mustGo || []).map((m, i) => ({
+      ...m,
+      rank: i + 1,
+    }));
+    renderOrdered("mustGoPhotos", must.slice(0, 6), "No must-go votes yet.");
 
     renderBars("foodBars", data.foodAnswers || [], FOOD_LABELS);
     renderBars("phraseBars", data.phraseAnswers || [], PHRASE_LABELS);
 
-    const c = data.calibration;
+    const c = data.calibration || {};
     document.getElementById("calibRow").innerHTML = `
       <div class="stat">
         <div class="stat__label">Appearance mean (1-4)</div>
@@ -287,8 +353,9 @@
         throw new Error(data?.error || "Unauthorized");
       }
       renderSummary(data);
-      renderFamiliarity(data);
       renderGrids(data);
+      renderLeastFamiliar(data);
+      renderFamiliarity(data);
       renderTable(data.photos);
       renderWildcards(data);
       gate.style.display = "none";
