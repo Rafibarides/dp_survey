@@ -133,10 +133,28 @@
     const lf = data.leastFamiliar;
     const help = document.getElementById("leastFamiliarHelp");
     const wrap = document.getElementById("leastFamiliarStrangerWrap");
+    const fam = data.familiarity || {};
+    const strangerTop = (fam.strangerTopSix || []).map((row, i) => ({
+      ...row,
+      rank: i + 1,
+    }));
+    const strangerCount = fam.counts?.stranger || 0;
 
+    // Backend deploy is stale: familiarity exists, but leastFamiliar payload is missing.
     if (!lf) {
-      help.textContent =
-        "No familiarity scores yet. Once people answer the food and phrase asides, the least-familiar shortlist appears here.";
+      if (strangerCount > 0 && strangerTop.length) {
+        help.textContent = `Your sheet already has familiarity scores (${strangerCount} stranger${strangerCount === 1 ? "" : "s"}). Showing the stranger group top six for now. Redeploy apps-script/Code.gs as a new web app version to unlock the exact shortlist from the single least-familiar respondent.`;
+        renderOrdered("leastFamiliarSix", strangerTop, "No stranger shortlist yet.");
+        wrap.hidden = true;
+        return;
+      }
+      if ((fam.counts?.knows || 0) + (fam.counts?.mixed || 0) > 0) {
+        help.textContent =
+          "Familiarity scores exist, but this section needs the latest Apps Script deploy. In the Apps Script editor, paste apps-script/Code.gs, then Deploy → Manage deployments → Edit → New version.";
+      } else {
+        help.textContent =
+          "No familiarity scores yet. Once people answer the food and phrase asides, the least-familiar shortlist appears here.";
+      }
       renderOrdered("leastFamiliarSix", [], "No least-familiar shortlist yet.");
       wrap.hidden = true;
       return;
@@ -154,13 +172,15 @@
       "No least-familiar shortlist yet."
     );
 
-    const showStranger =
-      lf.source === "tie" || (lf.strangerGroupTopSix && lf.strangerGroupTopSix.length);
+    const groupSix = lf.strangerGroupTopSix?.length
+      ? lf.strangerGroupTopSix
+      : strangerTop;
+    const showStranger = lf.source === "tie" || groupSix.length > 0;
     wrap.hidden = !showStranger;
     if (showStranger) {
       renderOrdered(
         "leastFamiliarStrangerSix",
-        lf.strangerGroupTopSix || [],
+        groupSix,
         "No stranger group shortlist yet."
       );
     }

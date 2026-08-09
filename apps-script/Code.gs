@@ -17,7 +17,7 @@
  * Familiarity is scored only on the server. Participants never see it.
  */
 
-var ADMIN_KEY = "dp-study-admin-2026";
+var ADMIN_KEY = "gRASS59NI(E";
 var PHOTO_IDS = [
   "DP_1", "DP_2", "DP_3", "DP_4", "DP_5",
   "DP_6", "DP_7", "DP_8", "DP_9", "DP_10",
