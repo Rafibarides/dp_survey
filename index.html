@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="robots" content="noindex" />
+    <title>Visual Preference Study</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="progress" aria-hidden="true">
+      <div class="progress__bar" id="progressBar"></div>
+    </div>
+
+    <main class="app" id="app">
+      <!-- INTRO -->
+      <section class="screen is-active" data-screen="intro">
+        <div class="hero">
+          <div class="kicker">Perception study</div>
+          <h1>Which images hold?</h1>
+          <p>
+            You will review 25 photographs, choose the six strongest, then rank
+            those six. Answer for yourself. There is no right answer.
+          </p>
+          <div class="hero__meta">
+            <span>Anonymous. No account.</span>
+            <span>About three minutes.</span>
+          </div>
+        </div>
+        <div class="footer-cta">
+          <button class="btn" type="button" id="startBtn">Begin</button>
+        </div>
+      </section>
+
+      <!-- SELECT -->
+      <section class="screen" data-screen="select">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Shortlist</div>
+            <div class="chrome__count">
+              <span id="selectCount">0</span><em>/6</em>
+            </div>
+          </div>
+          <p class="chrome__hint">
+            Tap the six photos you think are strongest.
+          </p>
+        </header>
+        <div class="grid-wrap">
+          <div class="photo-grid" id="selectGrid"></div>
+        </div>
+        <div class="tray" id="selectTray">
+          <div class="tray__slots" id="traySlots"></div>
+          <button class="btn" type="button" id="toRankBtn" disabled>
+            Rank these six
+          </button>
+        </div>
+      </section>
+
+      <!-- RANK -->
+      <section class="screen" data-screen="rank">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Rank</div>
+            <div class="chrome__count">
+              <span id="rankCount">0</span><em>/6</em>
+            </div>
+          </div>
+          <p class="chrome__hint" id="rankHint">
+            Tap your single favorite first. Then next strongest, through six.
+          </p>
+        </header>
+        <ul class="rank-list" id="rankList"></ul>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="toMustGoBtn" disabled>
+            Continue
+          </button>
+          <button class="btn btn--ghost" type="button" id="resetRankBtn">
+            Clear ranking
+          </button>
+        </div>
+      </section>
+
+      <!-- MUST GO -->
+      <section class="screen" data-screen="mustgo">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Exclusion</div>
+            <div class="chrome__count">1<em>/5</em></div>
+          </div>
+          <p class="chrome__hint">
+            Which photo is a complete no. The one that must not make the set.
+          </p>
+        </header>
+        <div class="question-body">
+          <div class="photo-grid" id="mustGoGrid"></div>
+        </div>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="toFoodBtn" disabled>
+            Continue
+          </button>
+        </div>
+      </section>
+
+      <!-- FOOD DIAGNOSTIC -->
+      <section class="screen" data-screen="food">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Aside</div>
+            <div class="chrome__count">2<em>/5</em></div>
+          </div>
+          <p class="chrome__hint">Which of these am I most likely to order?</p>
+        </header>
+        <div class="scale scale--choice" id="foodScale"></div>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="toPhraseBtn" disabled>
+            Continue
+          </button>
+        </div>
+      </section>
+
+      <!-- PHRASE DIAGNOSTIC -->
+      <section class="screen" data-screen="phrase">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Aside</div>
+            <div class="chrome__count">3<em>/5</em></div>
+          </div>
+          <p class="chrome__hint">Which of these phrases sound most like me?</p>
+        </header>
+        <div class="scale scale--choice" id="phraseScale"></div>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="toAppearanceBtn" disabled>
+            Continue
+          </button>
+        </div>
+      </section>
+
+      <!-- APPEARANCE -->
+      <section class="screen" data-screen="appearance">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Calibration</div>
+            <div class="chrome__count">4<em>/5</em></div>
+          </div>
+          <p class="chrome__hint">
+            Do these photos accurately represent this person's appearance?
+          </p>
+        </header>
+        <div class="scale" id="appearanceScale"></div>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="toPersonalityBtn" disabled>
+            Continue
+          </button>
+        </div>
+      </section>
+
+      <!-- PERSONALITY -->
+      <section class="screen" data-screen="personality">
+        <header class="chrome">
+          <div class="chrome__row">
+            <div class="chrome__title">Calibration</div>
+            <div class="chrome__count">5<em>/5</em></div>
+          </div>
+          <p class="chrome__hint">
+            Based on how you know them, do these photos accurately represent
+            their personality, vibe, and energy?
+          </p>
+        </header>
+        <div class="scale" id="personalityScale"></div>
+        <div class="rank-actions">
+          <button class="btn" type="button" id="submitBtn" disabled>
+            Submit response
+          </button>
+        </div>
+      </section>
+
+      <!-- DONE -->
+      <section class="screen" data-screen="done">
+        <div class="done">
+          <div class="kicker">Response recorded</div>
+          <h1>Thank you.</h1>
+          <p id="doneLead">
+            Your judgments are in the pool. Here is how close you landed against
+            everyone so far.
+          </p>
+          <div class="compare-card" id="compareCard">
+            <div class="compare-metric">
+              <div class="compare-metric__label">Overlap with group shortlist</div>
+              <div class="compare-metric__value" id="overlapValue">-</div>
+              <div class="meter"><span id="overlapMeter"></span></div>
+              <div class="compare-metric__note" id="overlapNote"></div>
+            </div>
+            <div class="compare-metric">
+              <div class="compare-metric__label">Alignment score</div>
+              <div class="compare-metric__value" id="alignValue">-</div>
+              <div class="meter"><span id="alignMeter"></span></div>
+              <div class="compare-metric__note" id="alignNote"></div>
+            </div>
+            <div class="compare-metric">
+              <div class="compare-metric__label">Your number one</div>
+              <div class="compare-metric__note" id="topNote"></div>
+            </div>
+          </div>
+          <p class="status-line" id="doneStatus">Calculating against the pool...</p>
+          <p class="error" id="doneError" hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/photos.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/survey.js"></script>
+  </body>
+</html>

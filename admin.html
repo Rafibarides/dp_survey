@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Study Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <main class="admin">
+      <div class="kicker">Internal</div>
+      <h1>Results dashboard</h1>
+      <p class="admin__sub">
+        Selection consensus weighted over rank enthusiasm. Familiarity is
+        inferred quietly from diagnostic asides, then used to compare people
+        who know you against strangers.
+      </p>
+
+      <section class="admin-gate" id="adminGate">
+        <label class="sr-only" for="adminKey">Admin key</label>
+        <input
+          id="adminKey"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Admin key"
+        />
+        <button class="btn" type="button" id="loadBtn">Load results</button>
+        <p class="error" id="gateError" hidden></p>
+      </section>
+
+      <section class="admin-stats" id="adminStats">
+        <div class="stat-row" id="summaryRow"></div>
+
+        <section class="section">
+          <h2>Familiarity split</h2>
+          <div class="stat-row" id="familiarityRow"></div>
+          <p class="admin__sub" id="familiarityNote" style="margin-top: 8px"></p>
+        </section>
+
+        <section class="section">
+          <h2>Top six if they know you</h2>
+          <div class="top-grid" id="knowsTopSix"></div>
+        </section>
+
+        <section class="section">
+          <h2>Top six from strangers</h2>
+          <div class="top-grid" id="strangerTopSix"></div>
+        </section>
+
+        <section class="section">
+          <h2>Biggest taste gaps</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Knows selected %</th>
+                  <th>Stranger selected %</th>
+                  <th>Delta</th>
+                </tr>
+              </thead>
+              <tbody id="gapBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Consensus top six</h2>
+          <div class="top-grid" id="topSix"></div>
+        </section>
+
+        <section class="section">
+          <h2>Most number one</h2>
+          <div class="top-grid" id="mostNumberOne"></div>
+        </section>
+
+        <section class="section">
+          <h2>Weakest performers</h2>
+          <div class="top-grid" id="weakest"></div>
+        </section>
+
+        <section class="section">
+          <h2>Highest polarization</h2>
+          <div class="top-grid" id="polarized"></div>
+        </section>
+
+        <section class="section">
+          <h2>Full table</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Selected %</th>
+                  <th>Avg rank when selected</th>
+                  <th>#1 %</th>
+                  <th>Final score</th>
+                  <th>Polarization</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Wildcard signals</h2>
+          <div class="wildcard-block">
+            <div>
+              <div class="stat__label" style="margin-bottom: 10px">
+                Absolute must go
+              </div>
+              <div class="bar-list" id="mustGoBars"></div>
+            </div>
+            <div>
+              <div class="stat__label" style="margin-bottom: 10px">
+                Food aside
+              </div>
+              <div class="bar-list" id="foodBars"></div>
+            </div>
+            <div>
+              <div class="stat__label" style="margin-bottom: 10px">
+                Phrase aside
+              </div>
+              <div class="bar-list" id="phraseBars"></div>
+            </div>
+            <div class="stat-row" id="calibRow"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/photos.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+  </body>
+</html>

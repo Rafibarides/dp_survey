@@ -1,0 +1,30 @@
+/** Canonical photo set. Optimized copies live in /images for mobile load. */
+window.PHOTOS = [
+  { id: "DP_1", src: "images/DP_1.jpg", label: "01" },
+  { id: "DP_2", src: "images/DP_2.jpg", label: "02" },
+  { id: "DP_3", src: "images/DP_3.jpg", label: "03" },
+  { id: "DP_4", src: "images/DP_4.jpg", label: "04" },
+  { id: "DP_5", src: "images/DP_5.jpg", label: "05" },
+  { id: "DP_6", src: "images/DP_6.jpg", label: "06" },
+  { id: "DP_7", src: "images/DP_7.jpg", label: "07" },
+  { id: "DP_8", src: "images/DP_8.jpg", label: "08" },
+  { id: "DP_9", src: "images/DP_9.jpg", label: "09" },
+  { id: "DP_10", src: "images/DP_10.jpg", label: "10" },
+  { id: "DP_11", src: "images/DP_11.jpg", label: "11" },
+  { id: "DP_12", src: "images/DP_12.jpg", label: "12" },
+  { id: "DP_13", src: "images/DP_13.jpg", label: "13" },
+  { id: "DP_14", src: "images/DP_14.jpg", label: "14" },
+  { id: "DP_15", src: "images/DP_15.jpg", label: "15" },
+  { id: "DP_16", src: "images/DP_16.jpg", label: "16" },
+  { id: "DP_17", src: "images/DP_17.jpg", label: "17" },
+  { id: "DP_18", src: "images/DP_18.jpg", label: "18" },
+  { id: "DP_19", src: "images/DP_19.jpg", label: "19" },
+  { id: "DP_20", src: "images/DP_20.jpg", label: "20" },
+  { id: "DP_21", src: "images/DP_21.jpg", label: "21" },
+  { id: "DP_22", src: "images/DP_22.jpg", label: "22" },
+  { id: "DP_23", src: "images/DP_23.jpg", label: "23" },
+  { id: "DP_24", src: "images/DP_24.jpg", label: "24" },
+  { id: "DP_25", src: "images/DP_25.jpg", label: "25" },
+];
+
+window.PHOTO_BY_ID = Object.fromEntries(window.PHOTOS.map((p) => [p.id, p]));
